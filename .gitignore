@@ -1,0 +1,15 @@
+# .NET build files
+bin/
+obj/
+
+# Visual Studio / Rider / VSCode
+.vs/
+*.user
+*.suo
+*.vscode/
+
+# Node / Next.js
+node_modules/
+.next/
+dist/
+.env
