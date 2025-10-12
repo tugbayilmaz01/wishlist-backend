@@ -1,4 +1,4 @@
-using DotNetEnv; 
+using DotNetEnv;
 using Microsoft.EntityFrameworkCore;
 using WishlistApi.Data;
 
@@ -8,6 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 
 var baseConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
 
 var dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD");
 
@@ -21,10 +22,20 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddControllers();
 
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+        policy.WithOrigins("http://localhost:3001")
+              .AllowAnyHeader()
+              .AllowAnyMethod());
+});
+
 var app = builder.Build();
 
-app.UseAuthorization();
 
+app.UseCors("AllowFrontend");
+app.UseAuthorization();
 app.MapControllers();
 
 app.Run();

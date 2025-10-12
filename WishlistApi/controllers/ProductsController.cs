@@ -14,10 +14,26 @@ public class ProductsController : ControllerBase
         _context = context;
     }
 
+
     [HttpGet]
     public async Task<IActionResult> GetProducts()
     {
         var products = await _context.Products.ToListAsync();
         return Ok(products);
+    }
+
+ 
+    [HttpPost]
+    public async Task<IActionResult> AddProduct([FromBody] Product product)
+    {
+   
+        if (product == null)
+            return BadRequest("Product cannot be null.");
+
+        _context.Products.Add(product);
+
+        await _context.SaveChangesAsync();
+
+        return Ok(product);
     }
 }
