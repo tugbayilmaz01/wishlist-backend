@@ -9,6 +9,11 @@ namespace WishlistApi.Data
         {
         }
 
+
         public DbSet<Product> Products { get; set; }
+
+
+        public DbSet<Wishlist> Wishlists { get; set; }
+        public DbSet<WishlistProduct> WishlistProducts { get; set; }
     }
 }
