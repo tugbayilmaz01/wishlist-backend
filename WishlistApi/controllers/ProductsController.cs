@@ -22,11 +22,11 @@ public class ProductsController : ControllerBase
         return Ok(products);
     }
 
- 
+
     [HttpPost]
     public async Task<IActionResult> AddProduct([FromBody] Product product)
     {
-   
+
         if (product == null)
             return BadRequest("Product cannot be null.");
 
@@ -35,5 +35,41 @@ public class ProductsController : ControllerBase
         await _context.SaveChangesAsync();
 
         return Ok(product);
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateProduct(int id, [FromBody] Product updatedProduct)
+    {
+        if (updatedProduct == null || id != updatedProduct.Id)
+            return BadRequest("Invalid product data.");
+
+        var product = await _context.Products.FindAsync(id);
+        if (product == null)
+            return NotFound("Product not found.");
+
+        product.Name = updatedProduct.Name;
+        product.Price = updatedProduct.Price;
+        product.Description = updatedProduct.Description;
+        product.ImageUrl = updatedProduct.ImageUrl;
+
+
+        await _context.SaveChangesAsync();
+        return Ok(product);
+
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteProduct(int id)
+    {
+        var product = await _context.Products.FindAsync(id);
+        if (product == null)
+            return NotFound("Product not found.");
+
+        _context.Products.Remove(product);
+        await _context.SaveChangesAsync();
+
+
+        return Ok(new { message = "Product deleted successfully", productId = id });
+        
     }
 }

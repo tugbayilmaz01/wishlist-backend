@@ -26,16 +26,17 @@ builder.Services.AddControllers();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
-        policy.WithOrigins("http://localhost:3001")
+        policy.AllowAnyOrigin()  
               .AllowAnyHeader()
               .AllowAnyMethod());
 });
 
 var app = builder.Build();
 
-
+app.UseHttpsRedirection(); 
 app.UseCors("AllowFrontend");
 app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
