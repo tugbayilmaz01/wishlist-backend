@@ -51,7 +51,7 @@ public class ProductsController : ControllerBase
         product.Price = updatedProduct.Price;
         product.Description = updatedProduct.Description;
         product.ImageUrl = updatedProduct.ImageUrl;
-
+        product.PlannedMonth = updatedProduct.PlannedMonth; 
 
         await _context.SaveChangesAsync();
         return Ok(product);

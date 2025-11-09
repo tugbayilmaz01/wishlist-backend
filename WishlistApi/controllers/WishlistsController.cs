@@ -38,7 +38,8 @@ namespace WishlistApi.Controllers
                     Name = wp.Product.Name,
                     Description = wp.Product.Description,
                     Price = wp.Product.Price,
-                    ImageUrl = wp.Product.ImageUrl
+                    ImageUrl = wp.Product.ImageUrl,
+                    PlannedMonth = wp.Product.PlannedMonth  
                 }).ToList()
             }).ToList();
 
@@ -81,7 +82,8 @@ namespace WishlistApi.Controllers
                     Name = wp.Product.Name,
                     Description = wp.Product.Description,
                     Price = wp.Product.Price,
-                    ImageUrl = wp.Product.ImageUrl
+                    ImageUrl = wp.Product.ImageUrl,
+                    PlannedMonth = wp.Product.PlannedMonth 
                 }).ToList()
             };
 
@@ -148,6 +150,7 @@ namespace WishlistApi.Controllers
             wishlistProduct.Product.Description = updatedProduct.Description;
             wishlistProduct.Product.Price = updatedProduct.Price;
             wishlistProduct.Product.ImageUrl = updatedProduct.ImageUrl;
+            wishlistProduct.Product.PlannedMonth = updatedProduct.PlannedMonth; 
 
             await _context.SaveChangesAsync();
 
