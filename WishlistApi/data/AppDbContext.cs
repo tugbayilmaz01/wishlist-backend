@@ -15,5 +15,7 @@ namespace WishlistApi.Data
 
         public DbSet<Wishlist> Wishlists { get; set; }
         public DbSet<WishlistProduct> WishlistProducts { get; set; }
+
+        public DbSet<User> Users { get; set; }
     }
 }
