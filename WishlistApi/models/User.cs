@@ -17,5 +17,8 @@ namespace WishlistApi.Models
 
         [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public ICollection<Wishlist>? Wishlists { get; set; }
+        public ICollection<Product>? Products { get; set; }
     }
 }

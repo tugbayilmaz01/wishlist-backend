@@ -13,6 +13,11 @@ namespace WishlistApi.Models
         [Column("name")]
         public string Name { get; set; }
 
+        [Column("user_id")]
+        public int UserId { get; set; }
+
+        public User? User { get; set; }
+
         [Column("description")]
         public string Description { get; set; }
 
@@ -22,7 +27,7 @@ namespace WishlistApi.Models
         [Column("updated_at")]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-   public ICollection<WishlistProduct>? WishlistProducts { get; set; }
+        public ICollection<WishlistProduct>? WishlistProducts { get; set; }
 
     }
 }
