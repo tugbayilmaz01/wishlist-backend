@@ -21,6 +21,9 @@ namespace WishlistApi.Models
         [Column("description")]
         public string Description { get; set; }
 
+        [Column("share_token")]
+        public string? ShareToken { get; set; }
+
         [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
