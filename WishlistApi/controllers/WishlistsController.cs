@@ -48,6 +48,7 @@ namespace WishlistApi.Controllers
                 Id = w.Id,
                 Name = w.Name,
                 Description = w.Description,
+                ShareToken = w.ShareToken,
                 Products = w.WishlistProducts.Select(wp => new ProductDto
                 {
                     Id = wp.Product.Id,
@@ -95,6 +96,7 @@ namespace WishlistApi.Controllers
                 Id = wishlist.Id,
                 Name = wishlist.Name,
                 Description = wishlist.Description,
+                ShareToken = wishlist.ShareToken,
                 Products = wishlist.WishlistProducts.Select(wp => new ProductDto
                 {
                     Id = wp.Product.Id,
@@ -222,6 +224,56 @@ namespace WishlistApi.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "Product removed from wishlist", productId });
+        }
+        [HttpPost("{id}/share")]
+        public async Task<IActionResult> ShareWishlist(int id)
+        {
+            var userId = GetUserId();
+            var wishlist = await _context.Wishlists
+                .FirstOrDefaultAsync(w => w.Id == id && w.UserId == userId);
+
+            if (wishlist == null)
+                return NotFound("Wishlist not found or you don't have permission to share it.");
+
+            if (string.IsNullOrEmpty(wishlist.ShareToken))
+            {
+                wishlist.ShareToken = Guid.NewGuid().ToString();
+                await _context.SaveChangesAsync();
+            }
+
+            return Ok(new { token = wishlist.ShareToken });
+        }
+
+        [HttpGet("shared/{token}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetSharedWishlist(string token)
+        {
+            var wishlist = await _context.Wishlists
+                .Include(w => w.WishlistProducts)
+                .ThenInclude(wp => wp.Product)
+                .FirstOrDefaultAsync(w => w.ShareToken == token);
+
+            if (wishlist == null)
+                return NotFound("Shared wishlist not found.");
+
+            var result = new WishlistDto
+            {
+                Id = wishlist.Id,
+                Name = wishlist.Name,
+                Description = wishlist.Description,
+                ShareToken = wishlist.ShareToken,
+                Products = wishlist.WishlistProducts.Select(wp => new ProductDto
+                {
+                    Id = wp.Product.Id,
+                    Name = wp.Product.Name,
+                    Description = wp.Product.Description,
+                    Price = wp.Product.Price,
+                    ImageUrl = wp.Product.ImageUrl,
+                    PlannedMonth = wp.Product.PlannedMonth
+                }).ToList()
+            };
+
+            return Ok(result);
         }
     }
 }
