@@ -4,19 +4,37 @@ using WishlistApi.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Npgsql;
 
 Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
+var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+string connectionString;
 
-var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL");
-
-if (string.IsNullOrEmpty(connectionString))
+if (string.IsNullOrEmpty(databaseUrl))
 {
     var baseConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
     var dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD");
     connectionString = $"{baseConnectionString}Password={dbPassword};";
+}
+else
+{
+
+    var databaseUri = new Uri(databaseUrl);
+    var userInfo = databaseUri.UserInfo.Split(':');
+    var dbBuilder = new NpgsqlConnectionStringBuilder
+    {
+        Host = databaseUri.Host,
+        Port = databaseUri.Port,
+        Username = userInfo[0],
+        Password = userInfo[1],
+        Database = databaseUri.LocalPath.TrimStart('/'),
+        SslMode = SslMode.Require,
+        TrustServerCertificate = true
+    };
+    connectionString = dbBuilder.ToString();
 }
 
 builder.Services.AddDbContext<AppDbContext>(options =>
