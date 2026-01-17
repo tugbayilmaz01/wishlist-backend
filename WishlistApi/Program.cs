@@ -64,6 +64,12 @@ var app = builder.Build();
 
 app.UseHttpsRedirection();
 
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    dbContext.Database.Migrate();
+}
+
 app.UseCors("AllowFrontend");
 
 app.UseAuthentication();
