@@ -15,6 +15,12 @@ namespace WishlistApi.Models
         [Column("password_hash")]
         public required string PasswordHash { get; set; }
 
+        [Column("name")]
+        public string? Name { get; set; }
+
+        [Column("avatar")]
+        public string? Avatar { get; set; }
+
         [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
