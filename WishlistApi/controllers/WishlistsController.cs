@@ -162,7 +162,18 @@ namespace WishlistApi.Controllers
             _context.WishlistProducts.Add(wishlistProduct);
             await _context.SaveChangesAsync();
 
-            return Ok(new { product, wishlistProduct });
+            return Ok(new
+            {
+                product = new ProductDto
+                {
+                    Id = product.Id,
+                    Name = product.Name,
+                    Description = product.Description,
+                    Price = product.Price,
+                    ImageUrl = product.ImageUrl,
+                    PlannedMonth = product.PlannedMonth
+                }
+            });
         }
 
         [HttpPut("{wishlistId}/products/{productId}")]
