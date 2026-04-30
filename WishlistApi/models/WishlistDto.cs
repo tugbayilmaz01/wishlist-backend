@@ -17,4 +17,5 @@ public class ProductDto
     public decimal Price { get; set; }
     public string ImageUrl { get; set; }
     public string? PlannedMonth { get; set; }
+    public string? Category { get; set; }
 }

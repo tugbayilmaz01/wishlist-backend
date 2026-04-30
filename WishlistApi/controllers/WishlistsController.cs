@@ -104,11 +104,33 @@ namespace WishlistApi.Controllers
                     Description = wp.Product.Description,
                     Price = wp.Product.Price,
                     ImageUrl = wp.Product.ImageUrl,
-                    PlannedMonth = wp.Product.PlannedMonth
+                    PlannedMonth = wp.Product.PlannedMonth,
+                    Category = wp.Product.Category
                 }).ToList()
             };
 
             return Ok(result);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateWishlist(int id, [FromBody] Wishlist updatedWishlist)
+        {
+            if (updatedWishlist == null || id != updatedWishlist.Id)
+                return BadRequest("Invalid wishlist data.");
+
+            var userId = GetUserId();
+            var wishlist = await _context.Wishlists
+                .FirstOrDefaultAsync(w => w.Id == id && w.UserId == userId);
+
+            if (wishlist == null)
+                return NotFound("Wishlist not found or you don't have permission to modify it.");
+
+            wishlist.Name = updatedWishlist.Name;
+            wishlist.Description = updatedWishlist.Description;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(wishlist);
         }
 
         [HttpDelete("{id}")]
@@ -171,7 +193,8 @@ namespace WishlistApi.Controllers
                     Description = product.Description,
                     Price = product.Price,
                     ImageUrl = product.ImageUrl,
-                    PlannedMonth = product.PlannedMonth
+                    PlannedMonth = product.PlannedMonth,
+                    Category = product.Category
                 }
             });
         }
@@ -205,6 +228,7 @@ namespace WishlistApi.Controllers
             wishlistProduct.Product.Price = updatedProduct.Price;
             wishlistProduct.Product.ImageUrl = updatedProduct.ImageUrl;
             wishlistProduct.Product.PlannedMonth = updatedProduct.PlannedMonth;
+            wishlistProduct.Product.Category = updatedProduct.Category;
 
             await _context.SaveChangesAsync();
 
@@ -280,7 +304,8 @@ namespace WishlistApi.Controllers
                     Description = wp.Product.Description,
                     Price = wp.Product.Price,
                     ImageUrl = wp.Product.ImageUrl,
-                    PlannedMonth = wp.Product.PlannedMonth
+                    PlannedMonth = wp.Product.PlannedMonth,
+                    Category = wp.Product.Category
                 }).ToList()
             };
 
