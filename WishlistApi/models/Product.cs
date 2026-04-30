@@ -21,8 +21,10 @@ namespace WishlistApi.Models
         public string ImageUrl { get; set; }
 
         [Column("month")]
+        public string? PlannedMonth { get; set; }
 
-        public string PlannedMonth { get; set; }
+        [Column("category")]
+        public string? Category { get; set; }
 
         [Column("user_id")]
         public int UserId { get; set; }
