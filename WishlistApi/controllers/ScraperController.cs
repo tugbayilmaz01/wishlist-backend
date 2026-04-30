@@ -5,25 +5,36 @@ using System.Text.Json;
 
 namespace WishlistApi.Controllers
 {
+    public class ScrapeRequestDto
+    {
+        public string? url { get; set; }
+    }
+
     [ApiController]
-    [Route("api/[controller]")]
-    [Authorize]
     public class ScraperController : ControllerBase
     {
-        [HttpGet]
-        public async Task<IActionResult> ScrapeUrl([FromQuery] string url)
+        [HttpPost("api/scrape")]
+        [Authorize]
+        public async Task<IActionResult> ScrapeUrl([FromBody] ScrapeRequestDto request)
         {
+            var url = request?.url;
             if (string.IsNullOrWhiteSpace(url))
             {
-                return BadRequest("URL cannot be empty.");
+                return BadRequest(new { message = "URL cannot be empty." });
             }
 
             try
             {
                 using var httpClient = new HttpClient();
-          
-                httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+                
+                httpClient.DefaultRequestHeaders.Clear();
+                httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36");
+                httpClient.DefaultRequestHeaders.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7");
                 httpClient.DefaultRequestHeaders.Add("Accept-Language", "tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7");
+                httpClient.DefaultRequestHeaders.Add("sec-ch-ua", "\"Not A(Brand\";v=\"99\", \"Google Chrome\";v=\"121\", \"Chromium\";v=\"121\"");
+                httpClient.DefaultRequestHeaders.Add("sec-ch-ua-mobile", "?0");
+                httpClient.DefaultRequestHeaders.Add("sec-ch-ua-platform", "\"macOS\"");
+                httpClient.DefaultRequestHeaders.Add("Upgrade-Insecure-Requests", "1");
                 
                 var html = await httpClient.GetStringAsync(url);
                 var htmlDoc = new HtmlDocument();
@@ -178,16 +189,18 @@ namespace WishlistApi.Controllers
 
                 return Ok(new
                 {
-                    Title = title?.Trim(),
-                    ImageUrl = imageUrl?.Trim(),
-                    Description = description?.Trim(),
-                    Price = price,
-                    SourceUrl = url
+                    data = new {
+                        title = title?.Trim(),
+                        image = imageUrl?.Trim(),
+                        description = description?.Trim(),
+                        price = price,
+                        sourceUrl = url
+                    }
                 });
             }
             catch (Exception ex)
             {
-                return Ok(new { Error = "Failed to scrape URL: " + ex.Message });
+                return BadRequest(new { message = "Failed to scrape URL: " + ex.Message });
             }
         }
 
