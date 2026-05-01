@@ -56,7 +56,8 @@ namespace WishlistApi.Controllers
                     Description = wp.Product.Description,
                     Price = wp.Product.Price,
                     ImageUrl = wp.Product.ImageUrl,
-                    PlannedMonth = wp.Product.PlannedMonth
+                    PlannedMonth = wp.Product.PlannedMonth,
+                    Category = wp.Product.Category
                 }).ToList()
             }).ToList();
 
