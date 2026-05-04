@@ -35,4 +35,9 @@ public class JwtService
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
+
+    public string GetGoogleClientId()
+    {
+        return Environment.GetEnvironmentVariable("GOOGLE_CLIENT_ID") ?? "";
+    }
 }

@@ -36,7 +36,7 @@ namespace WishlistApi.Controllers
         {
             if (_context.Users.Any(u => u.Email == userDto.Email))
             {
-                return BadRequest("Email already exists.");
+                return BadRequest(new { message = "Email already exists." });
             }
 
             var user = new User
@@ -56,14 +56,56 @@ namespace WishlistApi.Controllers
         public IActionResult Login([FromBody] UserLoginDto userDto)
         {
             var existingUser = _context.Users.SingleOrDefault(u => u.Email == userDto.Email);
-            if (existingUser == null) return BadRequest("User not found");
+            if (existingUser == null) return BadRequest(new { message = "User not found" });
 
             if (!PasswordService.VerifyPassword(userDto.Password, existingUser.PasswordHash))
-                return BadRequest("Invalid password");
+                return BadRequest(new { message = "Invalid password" });
 
             var token = _jwtService.GenerateToken(existingUser.Id.ToString(), existingUser.Email);
 
             return Ok(new { existingUser.Id, existingUser.Email, Token = token });
+        }
+
+        [HttpPost("social-login")]
+        public async Task<IActionResult> SocialLogin([FromBody] SocialLoginDto socialDto)
+        {
+            try
+            {
+                if (socialDto.Provider.ToLower() != "google")
+                    return BadRequest(new { message = "Provider not supported" });
+
+                var settings = new Google.Apis.Auth.GoogleJsonWebSignature.ValidationSettings()
+                {
+                    Audience = new[] { _jwtService.GetGoogleClientId() } 
+                };
+
+                var payload = await Google.Apis.Auth.GoogleJsonWebSignature.ValidateAsync(socialDto.Token, settings);
+                
+                var existingUser = _context.Users.SingleOrDefault(u => u.Email == payload.Email);
+
+                if (existingUser == null)
+                {
+                    
+                    existingUser = new User
+                    {
+                        Email = payload.Email,
+                        Name = payload.Name,
+                        Avatar = payload.Picture,
+                        PasswordHash = "", 
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    _context.Users.Add(existingUser);
+                    await _context.SaveChangesAsync();
+                }
+
+                var token = _jwtService.GenerateToken(existingUser.Id.ToString(), existingUser.Email);
+
+                return Ok(new { existingUser.Id, existingUser.Email, Token = token });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = $"Social login failed: {ex.Message}" });
+            }
         }
 
         [HttpGet("me")]

@@ -25,4 +25,10 @@ namespace WishlistApi.Models
         public string? Name { get; set; }
         public string? Avatar { get; set; }
     }
+
+    public class SocialLoginDto
+    {
+        public required string Token { get; set; }
+        public required string Provider { get; set; }
+    }
 }
