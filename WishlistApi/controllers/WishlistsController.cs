@@ -50,7 +50,6 @@ namespace WishlistApi.Controllers
             {
                 Id = w.Id,
                 Name = w.Name,
-                Description = w.Description,
                 ShareToken = w.ShareToken,
                 IsOwner = w.UserId == userId,
                 Owner = w.User != null ? new CollaboratorDto
@@ -64,9 +63,9 @@ namespace WishlistApi.Controllers
                 {
                     Id = wp.Product.Id,
                     Name = wp.Product.Name,
-                    Description = wp.Product.Description,
                     Price = wp.Product.Price,
                     ImageUrl = wp.Product.ImageUrl,
+                    ProductUrl = wp.Product.ProductUrl,
                     PlannedMonth = wp.Product.PlannedMonth,
                     Category = wp.Product.Category
                 }).ToList(),
@@ -117,7 +116,6 @@ namespace WishlistApi.Controllers
             {
                 Id = wishlist.Id,
                 Name = wishlist.Name,
-                Description = wishlist.Description,
                 ShareToken = wishlist.ShareToken,
                 IsOwner = wishlist.UserId == userId,
                 Owner = wishlist.User != null ? new CollaboratorDto
@@ -131,9 +129,9 @@ namespace WishlistApi.Controllers
                 {
                     Id = wp.Product.Id,
                     Name = wp.Product.Name,
-                    Description = wp.Product.Description,
                     Price = wp.Product.Price,
                     ImageUrl = wp.Product.ImageUrl,
+                    ProductUrl = wp.Product.ProductUrl,
                     PlannedMonth = wp.Product.PlannedMonth,
                     Category = wp.Product.Category
                 }).ToList(),
@@ -163,7 +161,6 @@ namespace WishlistApi.Controllers
                 return NotFound("Wishlist not found or you don't have permission to modify it.");
 
             wishlist.Name = updatedWishlist.Name;
-            wishlist.Description = updatedWishlist.Description;
 
             await _context.SaveChangesAsync();
 
@@ -227,9 +224,9 @@ namespace WishlistApi.Controllers
                 {
                     Id = product.Id,
                     Name = product.Name,
-                    Description = product.Description,
                     Price = product.Price,
                     ImageUrl = product.ImageUrl,
+                    ProductUrl = product.ProductUrl,
                     PlannedMonth = product.PlannedMonth,
                     Category = product.Category
                 }
@@ -261,15 +258,24 @@ namespace WishlistApi.Controllers
                 return NotFound("Product not found in this wishlist or you don't have permission to modify it.");
 
             wishlistProduct.Product.Name = updatedProduct.Name;
-            wishlistProduct.Product.Description = updatedProduct.Description;
             wishlistProduct.Product.Price = updatedProduct.Price;
             wishlistProduct.Product.ImageUrl = updatedProduct.ImageUrl;
+            wishlistProduct.Product.ProductUrl = updatedProduct.ProductUrl;
             wishlistProduct.Product.PlannedMonth = updatedProduct.PlannedMonth;
             wishlistProduct.Product.Category = updatedProduct.Category;
 
             await _context.SaveChangesAsync();
 
-            return Ok(wishlistProduct.Product);
+            return Ok(new ProductDto
+            {
+                Id = wishlistProduct.Product.Id,
+                Name = wishlistProduct.Product.Name,
+                Price = wishlistProduct.Product.Price,
+                ImageUrl = wishlistProduct.Product.ImageUrl,
+                ProductUrl = wishlistProduct.Product.ProductUrl,
+                PlannedMonth = wishlistProduct.Product.PlannedMonth,
+                Category = wishlistProduct.Product.Category
+            });
         }
 
         [HttpDelete("{wishlistId}/products/{productId}")]
@@ -332,13 +338,11 @@ namespace WishlistApi.Controllers
             {
                 Id = wishlist.Id,
                 Name = wishlist.Name,
-                Description = wishlist.Description,
                 ShareToken = wishlist.ShareToken,
                 Products = wishlist.WishlistProducts.Select(wp => new ProductDto
                 {
                     Id = wp.Product.Id,
                     Name = wp.Product.Name,
-                    Description = wp.Product.Description,
                     Price = wp.Product.Price,
                     ImageUrl = wp.Product.ImageUrl,
                     PlannedMonth = wp.Product.PlannedMonth,
