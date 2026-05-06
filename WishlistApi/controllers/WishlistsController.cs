@@ -38,9 +38,12 @@ namespace WishlistApi.Controllers
         {
             var userId = GetUserId();
             var wishlists = await _context.Wishlists
-                .Where(w => w.UserId == userId)
+                .Where(w => w.UserId == userId || w.WishlistCollaborators.Any(wc => wc.UserId == userId))
+                .Include(w => w.User)
                 .Include(w => w.WishlistProducts)
                     .ThenInclude(wp => wp.Product)
+                .Include(w => w.WishlistCollaborators)
+                    .ThenInclude(wc => wc.User)
                 .ToListAsync();
 
             var result = wishlists.Select(w => new WishlistDto
@@ -49,6 +52,14 @@ namespace WishlistApi.Controllers
                 Name = w.Name,
                 Description = w.Description,
                 ShareToken = w.ShareToken,
+                IsOwner = w.UserId == userId,
+                Owner = w.User != null ? new CollaboratorDto
+                {
+                    Id = w.User.Id,
+                    Name = w.User.Name,
+                    Email = w.User.Email,
+                    Avatar = w.User.Avatar
+                } : null,
                 Products = w.WishlistProducts.Select(wp => new ProductDto
                 {
                     Id = wp.Product.Id,
@@ -58,6 +69,13 @@ namespace WishlistApi.Controllers
                     ImageUrl = wp.Product.ImageUrl,
                     PlannedMonth = wp.Product.PlannedMonth,
                     Category = wp.Product.Category
+                }).ToList(),
+                Collaborators = w.WishlistCollaborators.Select(wc => new CollaboratorDto
+                {
+                    Id = wc.User.Id,
+                    Name = wc.User.Name,
+                    Email = wc.User.Email,
+                    Avatar = wc.User.Avatar
                 }).ToList()
             }).ToList();
 
@@ -84,9 +102,12 @@ namespace WishlistApi.Controllers
         {
             var userId = GetUserId();
             var wishlist = await _context.Wishlists
-                .Where(w => w.Id == id && w.UserId == userId)
+                .Where(w => w.Id == id && (w.UserId == userId || w.WishlistCollaborators.Any(wc => wc.UserId == userId)))
+                .Include(w => w.User)
                 .Include(w => w.WishlistProducts)
                     .ThenInclude(wp => wp.Product)
+                .Include(w => w.WishlistCollaborators)
+                    .ThenInclude(wc => wc.User)
                 .FirstOrDefaultAsync();
 
             if (wishlist == null)
@@ -98,6 +119,14 @@ namespace WishlistApi.Controllers
                 Name = wishlist.Name,
                 Description = wishlist.Description,
                 ShareToken = wishlist.ShareToken,
+                IsOwner = wishlist.UserId == userId,
+                Owner = wishlist.User != null ? new CollaboratorDto
+                {
+                    Id = wishlist.User.Id,
+                    Name = wishlist.User.Name,
+                    Email = wishlist.User.Email,
+                    Avatar = wishlist.User.Avatar
+                } : null,
                 Products = wishlist.WishlistProducts.Select(wp => new ProductDto
                 {
                     Id = wp.Product.Id,
@@ -107,6 +136,13 @@ namespace WishlistApi.Controllers
                     ImageUrl = wp.Product.ImageUrl,
                     PlannedMonth = wp.Product.PlannedMonth,
                     Category = wp.Product.Category
+                }).ToList(),
+                Collaborators = wishlist.WishlistCollaborators.Select(wc => new CollaboratorDto
+                {
+                    Id = wc.User.Id,
+                    Name = wc.User.Name,
+                    Email = wc.User.Email,
+                    Avatar = wc.User.Avatar
                 }).ToList()
             };
 
@@ -164,7 +200,7 @@ namespace WishlistApi.Controllers
             var userId = GetUserId();
 
             var wishlist = await _context.Wishlists
-                .Where(w => w.Id == wishlistId && w.UserId == userId)
+                .Where(w => w.Id == wishlistId && (w.UserId == userId || w.WishlistCollaborators.Any(wc => wc.UserId == userId)))
                 .FirstOrDefaultAsync();
 
             if (wishlist == null)
@@ -210,7 +246,7 @@ namespace WishlistApi.Controllers
 
 
             var wishlist = await _context.Wishlists
-                .Where(w => w.Id == wishlistId && w.UserId == userId)
+                .Where(w => w.Id == wishlistId && (w.UserId == userId || w.WishlistCollaborators.Any(wc => wc.UserId == userId)))
                 .FirstOrDefaultAsync();
 
             if (wishlist == null)
@@ -243,7 +279,7 @@ namespace WishlistApi.Controllers
 
 
             var wishlist = await _context.Wishlists
-                .Where(w => w.Id == wishlistId && w.UserId == userId)
+                .Where(w => w.Id == wishlistId && (w.UserId == userId || w.WishlistCollaborators.Any(wc => wc.UserId == userId)))
                 .FirstOrDefaultAsync();
 
             if (wishlist == null)
@@ -311,6 +347,74 @@ namespace WishlistApi.Controllers
             };
 
             return Ok(result);
+        }
+
+        public class InviteRequest
+        {
+            public string Email { get; set; }
+        }
+
+        [HttpPost("{id}/collaborators")]
+        public async Task<IActionResult> AddCollaborator(int id, [FromBody] InviteRequest request)
+        {
+            if (request == null || string.IsNullOrEmpty(request.Email))
+                return BadRequest("Email is required.");
+
+            var userId = GetUserId();
+            var wishlist = await _context.Wishlists
+                .Include(w => w.WishlistCollaborators)
+                .FirstOrDefaultAsync(w => w.Id == id && w.UserId == userId);
+
+            if (wishlist == null)
+                return NotFound("Wishlist not found or you don't have permission to add collaborators.");
+
+            var userToAdd = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+            if (userToAdd == null)
+                return NotFound("User with this email not found.");
+
+            if (userToAdd.Id == userId)
+                return BadRequest("You cannot add yourself as a collaborator.");
+
+            if (wishlist.WishlistCollaborators.Any(wc => wc.UserId == userToAdd.Id))
+                return BadRequest("User is already a collaborator.");
+
+            var collaborator = new WishlistCollaborator
+            {
+                WishlistId = id,
+                UserId = userToAdd.Id
+            };
+
+            _context.WishlistCollaborators.Add(collaborator);
+            await _context.SaveChangesAsync();
+
+            return Ok(new CollaboratorDto
+            {
+                Id = userToAdd.Id,
+                Name = userToAdd.Name,
+                Email = userToAdd.Email,
+                Avatar = userToAdd.Avatar
+            });
+        }
+
+        [HttpDelete("{id}/collaborators/{collaboratorId}")]
+        public async Task<IActionResult> RemoveCollaborator(int id, int collaboratorId)
+        {
+            var userId = GetUserId();
+            var wishlist = await _context.Wishlists
+                .Include(w => w.WishlistCollaborators)
+                .FirstOrDefaultAsync(w => w.Id == id && w.UserId == userId);
+
+            if (wishlist == null)
+                return NotFound("Wishlist not found or you don't have permission to modify collaborators.");
+
+            var collaborator = wishlist.WishlistCollaborators.FirstOrDefault(wc => wc.UserId == collaboratorId);
+            if (collaborator == null)
+                return NotFound("Collaborator not found.");
+
+            _context.WishlistCollaborators.Remove(collaborator);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Collaborator removed successfully" });
         }
     }
 }

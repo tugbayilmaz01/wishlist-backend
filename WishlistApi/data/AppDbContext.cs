@@ -15,6 +15,7 @@ namespace WishlistApi.Data
 
         public DbSet<Wishlist> Wishlists { get; set; }
         public DbSet<WishlistProduct> WishlistProducts { get; set; }
+        public DbSet<WishlistCollaborator> WishlistCollaborators { get; set; }
 
         public DbSet<User> Users { get; set; }
 
@@ -48,6 +49,18 @@ namespace WishlistApi.Data
                 .HasOne(wp => wp.Product)
                 .WithMany()
                 .HasForeignKey(wp => wp.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<WishlistCollaborator>()
+                .HasOne(wc => wc.Wishlist)
+                .WithMany(w => w.WishlistCollaborators)
+                .HasForeignKey(wc => wc.WishlistId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<WishlistCollaborator>()
+                .HasOne(wc => wc.User)
+                .WithMany(u => u.SharedWishlists)
+                .HasForeignKey(wc => wc.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }

@@ -26,5 +26,6 @@ namespace WishlistApi.Models
 
         public ICollection<Wishlist>? Wishlists { get; set; }
         public ICollection<Product>? Products { get; set; }
+        public ICollection<WishlistCollaborator>? SharedWishlists { get; set; }
     }
 }

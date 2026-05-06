@@ -31,6 +31,7 @@ namespace WishlistApi.Models
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
         public ICollection<WishlistProduct>? WishlistProducts { get; set; }
+        public ICollection<WishlistCollaborator>? WishlistCollaborators { get; set; }
 
     }
 }
