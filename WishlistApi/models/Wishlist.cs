@@ -18,8 +18,6 @@ namespace WishlistApi.Models
 
         public User? User { get; set; }
 
-        [Column("description")]
-        public string Description { get; set; }
 
         [Column("share_token")]
         public string? ShareToken { get; set; }

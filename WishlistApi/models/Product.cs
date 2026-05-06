@@ -18,17 +18,19 @@ namespace WishlistApi.Models
         public decimal Price { get; set; }
 
         [Column("imageurl")]
+        [System.Text.Json.Serialization.JsonPropertyName("imageUrl")]
         public string ImageUrl { get; set; }
 
         [Column("product_url")]
+        [System.Text.Json.Serialization.JsonPropertyName("productUrl")]
         public string? ProductUrl { get; set; }
 
-
-
         [Column("month")]
+        [System.Text.Json.Serialization.JsonPropertyName("plannedMonth")]
         public string? PlannedMonth { get; set; }
 
         [Column("category")]
+        [System.Text.Json.Serialization.JsonPropertyName("category")]
         public string? Category { get; set; }
 
         [Column("user_id")]
