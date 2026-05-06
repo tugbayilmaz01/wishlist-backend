@@ -91,7 +91,7 @@ namespace WishlistApi.Controllers
                         Email = payload.Email,
                         Name = payload.Name,
                         Avatar = payload.Picture,
-                        PasswordHash = "", 
+                        PasswordHash = null, 
                         CreatedAt = DateTime.UtcNow
                     };
                     _context.Users.Add(existingUser);
