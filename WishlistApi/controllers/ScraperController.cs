@@ -41,12 +41,22 @@ namespace WishlistApi.Controllers
                 htmlDoc.LoadHtml(html);
 
               
-                string title = null;
-                string imageUrl = null;
-                string description = null;
+                string? title = null;
+                string? imageUrl = null;
+                string? description = null;
                 decimal? price = null;
 
-               
+                // 1. Try Meta Tags first for images (often more accurate for variants)
+                var ogImageNode = htmlDoc.DocumentNode.SelectSingleNode("//meta[@property='og:image']");
+                if (ogImageNode != null) imageUrl = ogImageNode.GetAttributeValue("content", null);
+
+                var ogTitleNode = htmlDoc.DocumentNode.SelectSingleNode("//meta[@property='og:title']");
+                if (ogTitleNode != null) title = System.Net.WebUtility.HtmlDecode(ogTitleNode.GetAttributeValue("content", null));
+
+                var ogDescNode = htmlDoc.DocumentNode.SelectSingleNode("//meta[@property='og:description']");
+                if (ogDescNode != null) description = System.Net.WebUtility.HtmlDecode(ogDescNode.GetAttributeValue("content", null));
+
+                // 2. Try JSON-LD for Price and deeper info
                 var scriptNodes = htmlDoc.DocumentNode.SelectNodes("//script[@type='application/ld+json']");
                 if (scriptNodes != null)
                 {
@@ -60,13 +70,12 @@ namespace WishlistApi.Controllers
                             {
                                 var typeStr = typeElement.GetString();
 
-                          
                                 if (typeStr == "Product")
                                 {
-                                    if (root.TryGetProperty("name", out var nameProp)) title = nameProp.GetString();
-                                    if (root.TryGetProperty("description", out var descProp)) description = descProp.GetString();
+                                    if (string.IsNullOrEmpty(title) && root.TryGetProperty("name", out var nameProp)) title = nameProp.GetString();
+                                    if (string.IsNullOrEmpty(description) && root.TryGetProperty("description", out var descProp)) description = descProp.GetString();
                                     
-                                    if (root.TryGetProperty("image", out var imgProp))
+                                    if (string.IsNullOrEmpty(imageUrl) && root.TryGetProperty("image", out var imgProp))
                                     {
                                         if (imgProp.ValueKind == JsonValueKind.String)
                                             imageUrl = imgProp.GetString();
@@ -86,27 +95,32 @@ namespace WishlistApi.Controllers
                                     break;
                                 }
 
-                               
                                 if (typeStr == "ProductGroup")
                                 {
-                                    if (root.TryGetProperty("name", out var nameProp)) title = nameProp.GetString();
-                                    if (root.TryGetProperty("description", out var descProp)) description = descProp.GetString();
-
-                                   
+                                    if (string.IsNullOrEmpty(title) && root.TryGetProperty("name", out var nameProp)) title = nameProp.GetString();
+                                    
                                     if (root.TryGetProperty("hasVariant", out var variantsProp) &&
                                         variantsProp.ValueKind == JsonValueKind.Array &&
                                         variantsProp.GetArrayLength() > 0)
                                     {
-                                        var firstVariant = variantsProp[0];
+                                        // Try to find variant in URL
+                                        var selectedVariant = variantsProp[0];
+                                        foreach (var variant in variantsProp.EnumerateArray())
+                                        {
+                                            if (variant.TryGetProperty("sku", out var skuProp) && url.Contains(skuProp.GetString() ?? ""))
+                                            {
+                                                selectedVariant = variant;
+                                                break;
+                                            }
+                                        }
 
-                                     
-                                        if (imageUrl == null && firstVariant.TryGetProperty("image", out var vImgProp))
+                                        if (string.IsNullOrEmpty(imageUrl) && selectedVariant.TryGetProperty("image", out var vImgProp))
                                         {
                                             if (vImgProp.ValueKind == JsonValueKind.String)
                                                 imageUrl = vImgProp.GetString();
                                         }
 
-                                        if (firstVariant.TryGetProperty("offers", out var vOffersProp))
+                                        if (selectedVariant.TryGetProperty("offers", out var vOffersProp))
                                         {
                                             var offerToUse = vOffersProp.ValueKind == JsonValueKind.Array && vOffersProp.GetArrayLength() > 0
                                                 ? vOffersProp[0] : vOffersProp;
@@ -117,25 +131,9 @@ namespace WishlistApi.Controllers
                                 }
                             }
                         }
-                        catch { /* Ignore parse errors on individual scripts */ }
+                        catch { /* Ignore parse errors */ }
                     }
                 }
-
-        
-                if (string.IsNullOrEmpty(title))
-                {
-                    var ogTitleNode = htmlDoc.DocumentNode.SelectSingleNode("//meta[@property='og:title']");
-                    if (ogTitleNode != null) title = System.Net.WebUtility.HtmlDecode(ogTitleNode.GetAttributeValue("content", null));
-                }
-
-                if (string.IsNullOrEmpty(imageUrl))
-                {
-                    var ogImageNode = htmlDoc.DocumentNode.SelectSingleNode("//meta[@property='og:image']");
-                    if (ogImageNode != null) imageUrl = ogImageNode.GetAttributeValue("content", null);
-                }
-
-                var ogDescNode = htmlDoc.DocumentNode.SelectSingleNode("//meta[@property='og:description']");
-                if (ogDescNode != null) description = System.Net.WebUtility.HtmlDecode(ogDescNode.GetAttributeValue("content", null));
 
             
                 if (string.IsNullOrEmpty(title))
