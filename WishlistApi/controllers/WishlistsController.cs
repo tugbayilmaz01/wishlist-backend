@@ -67,7 +67,8 @@ namespace WishlistApi.Controllers
                     ImageUrl = wp.Product.ImageUrl,
                     ProductUrl = wp.Product.ProductUrl,
                     PlannedMonth = wp.Product.PlannedMonth,
-                    Category = wp.Product.Category
+                    Category = wp.Product.Category,
+                    IsPurchased = wp.Product.IsPurchased
                 }).ToList(),
                 Collaborators = w.WishlistCollaborators.Select(wc => new CollaboratorDto
                 {
@@ -133,7 +134,8 @@ namespace WishlistApi.Controllers
                     ImageUrl = wp.Product.ImageUrl,
                     ProductUrl = wp.Product.ProductUrl,
                     PlannedMonth = wp.Product.PlannedMonth,
-                    Category = wp.Product.Category
+                    Category = wp.Product.Category,
+                    IsPurchased = wp.Product.IsPurchased
                 }).ToList(),
                 Collaborators = wishlist.WishlistCollaborators.Select(wc => new CollaboratorDto
                 {
@@ -228,7 +230,8 @@ namespace WishlistApi.Controllers
                     ImageUrl = product.ImageUrl,
                     ProductUrl = product.ProductUrl,
                     PlannedMonth = product.PlannedMonth,
-                    Category = product.Category
+                    Category = product.Category,
+                    IsPurchased = product.IsPurchased
                 }
             });
         }
@@ -263,6 +266,7 @@ namespace WishlistApi.Controllers
             wishlistProduct.Product.ProductUrl = updatedProduct.ProductUrl;
             wishlistProduct.Product.PlannedMonth = updatedProduct.PlannedMonth;
             wishlistProduct.Product.Category = updatedProduct.Category;
+            wishlistProduct.Product.IsPurchased = updatedProduct.IsPurchased;
 
             await _context.SaveChangesAsync();
 
@@ -274,7 +278,8 @@ namespace WishlistApi.Controllers
                 ImageUrl = wishlistProduct.Product.ImageUrl,
                 ProductUrl = wishlistProduct.Product.ProductUrl,
                 PlannedMonth = wishlistProduct.Product.PlannedMonth,
-                Category = wishlistProduct.Product.Category
+                Category = wishlistProduct.Product.Category,
+                IsPurchased = wishlistProduct.Product.IsPurchased
             });
         }
 
@@ -346,7 +351,8 @@ namespace WishlistApi.Controllers
                     Price = wp.Product.Price,
                     ImageUrl = wp.Product.ImageUrl,
                     PlannedMonth = wp.Product.PlannedMonth,
-                    Category = wp.Product.Category
+                    Category = wp.Product.Category,
+                    IsPurchased = wp.Product.IsPurchased
                 }).ToList()
             };
 

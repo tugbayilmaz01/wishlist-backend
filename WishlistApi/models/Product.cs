@@ -33,6 +33,10 @@ namespace WishlistApi.Models
         [System.Text.Json.Serialization.JsonPropertyName("category")]
         public string? Category { get; set; }
 
+        [Column("is_purchased")]
+        [System.Text.Json.Serialization.JsonPropertyName("isPurchased")]
+        public bool IsPurchased { get; set; } = false;
+
         [Column("user_id")]
         public int UserId { get; set; }
 
