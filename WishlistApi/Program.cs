@@ -77,16 +77,17 @@ builder.Services.AddControllers()
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
-        policy.AllowAnyOrigin()
+        policy.WithOrigins("http://localhost:8081", "http://localhost:19006", "http://localhost:8082", "http://localhost:3000")
               .AllowAnyHeader()
-              .AllowAnyMethod());
+              .AllowAnyMethod()
+              .AllowCredentials());
 });
 
 builder.Services.AddScoped<JwtService>();
 
 var app = builder.Build();
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 
 using (var scope = app.Services.CreateScope())
 {
