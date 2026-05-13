@@ -80,7 +80,10 @@ builder.Services.AddCors(options =>
         policy.SetIsOriginAllowed(origin => 
         {
             var uri = new Uri(origin);
-            return uri.Host == "localhost" || uri.Host == "127.0.0.1" || origin.StartsWith("http://192.168.");
+            return uri.Host == "localhost" || 
+                   uri.Host == "127.0.0.1" || 
+                   uri.Host == "wishlist-frontend-mocha.vercel.app" ||
+                   origin.StartsWith("http://192.168.");
         })
         .AllowAnyHeader()
         .AllowAnyMethod()
