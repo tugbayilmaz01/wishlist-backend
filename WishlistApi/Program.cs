@@ -77,10 +77,14 @@ builder.Services.AddControllers()
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
-        policy.WithOrigins("http://localhost:8081", "http://localhost:19006", "http://localhost:8082", "http://localhost:3000")
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials());
+        policy.SetIsOriginAllowed(origin => 
+        {
+            var uri = new Uri(origin);
+            return uri.Host == "localhost" || uri.Host == "127.0.0.1" || origin.StartsWith("http://192.168.");
+        })
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .AllowCredentials());
 });
 
 builder.Services.AddScoped<JwtService>();
