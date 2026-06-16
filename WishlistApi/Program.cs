@@ -91,6 +91,7 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddScoped<JwtService>();
+builder.Services.AddScoped<WishlistApi.Services.EmailService>();
 
 var app = builder.Build();
 
