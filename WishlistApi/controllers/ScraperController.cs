@@ -28,12 +28,17 @@ namespace WishlistApi.Controllers
                 using var httpClient = new HttpClient();
                 
                 httpClient.DefaultRequestHeaders.Clear();
-                httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36");
-                httpClient.DefaultRequestHeaders.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7");
+                httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36");
+                httpClient.DefaultRequestHeaders.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8");
                 httpClient.DefaultRequestHeaders.Add("Accept-Language", "tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7");
-                httpClient.DefaultRequestHeaders.Add("sec-ch-ua", "\"Not A(Brand\";v=\"99\", \"Google Chrome\";v=\"121\", \"Chromium\";v=\"121\"");
+                httpClient.DefaultRequestHeaders.Add("Referer", "https://www.trendyol.com/");
+                httpClient.DefaultRequestHeaders.Add("sec-ch-ua", "\"Google Chrome\";v=\"123\", \"Not:A-Brand\";v=\"8\", \"Chromium\";v=\"123\"");
                 httpClient.DefaultRequestHeaders.Add("sec-ch-ua-mobile", "?0");
                 httpClient.DefaultRequestHeaders.Add("sec-ch-ua-platform", "\"macOS\"");
+                httpClient.DefaultRequestHeaders.Add("sec-fetch-dest", "document");
+                httpClient.DefaultRequestHeaders.Add("sec-fetch-mode", "navigate");
+                httpClient.DefaultRequestHeaders.Add("sec-fetch-site", "same-origin");
+                httpClient.DefaultRequestHeaders.Add("sec-fetch-user", "?1");
                 httpClient.DefaultRequestHeaders.Add("Upgrade-Insecure-Requests", "1");
                 
                 var html = await httpClient.GetStringAsync(url);
