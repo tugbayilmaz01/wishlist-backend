@@ -31,4 +31,23 @@ namespace WishlistApi.Models
         public required string Token { get; set; }
         public required string Provider { get; set; }
     }
+
+    public class ForgotPasswordDto
+    {
+        [Required(ErrorMessage = "Email is required.")]
+        [EmailAddress(ErrorMessage = "Invalid email format.")]
+        public required string Email { get; set; }
+    }
+
+    public class ResetPasswordDto
+    {
+        [Required]
+        public required string Token { get; set; }
+
+        [Required]
+        [MinLength(8)]
+        [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$")]
+        public required string NewPassword { get; set; }
+    }
 }
+

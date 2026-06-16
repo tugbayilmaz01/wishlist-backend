@@ -24,8 +24,15 @@ namespace WishlistApi.Models
         [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+        [Column("password_reset_token")]
+        public string? PasswordResetToken { get; set; }
+
+        [Column("password_reset_token_expiry")]
+        public DateTime? PasswordResetTokenExpiry { get; set; }
+
         public ICollection<Wishlist>? Wishlists { get; set; }
         public ICollection<Product>? Products { get; set; }
         public ICollection<WishlistCollaborator>? SharedWishlists { get; set; }
     }
 }
+
