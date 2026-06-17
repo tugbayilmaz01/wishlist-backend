@@ -60,7 +60,7 @@ namespace WishlistApi.Controllers
             var existingUser = _context.Users.SingleOrDefault(u => u.Email == userDto.Email);
             if (existingUser == null) return BadRequest(new { message = "Invalid email or password" });
 
-            if (!PasswordService.VerifyPassword(userDto.Password, existingUser.PasswordHash))
+            if (existingUser.PasswordHash == null || !PasswordService.VerifyPassword(userDto.Password, existingUser.PasswordHash))
                 return BadRequest(new { message = "Invalid email or password" });
 
             var token = _jwtService.GenerateToken(existingUser.Id.ToString(), existingUser.Email);
