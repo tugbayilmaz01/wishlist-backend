@@ -96,37 +96,52 @@ builder.Services.AddRateLimiter(options =>
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 
     options.AddPolicy("GlobalLimit", context =>
-        RateLimitPartition.GetFixedWindowLimiter(
-            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? context.Request.Headers.Host.ToString(),
+    {
+        var ip = context.Request.Headers["X-Forwarded-For"].FirstOrDefault()
+                 ?? context.Connection.RemoteIpAddress?.ToString()
+                 ?? context.Request.Headers.Host.ToString();
+        return RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: ip,
             factory: partition => new FixedWindowRateLimiterOptions
             {
                 AutoReplenishment = true,
                 PermitLimit = 100,
                 QueueLimit = 0,
                 Window = TimeSpan.FromMinutes(1)
-            }));
+            });
+    });
 
     options.AddPolicy("AuthLimit", context =>
-        RateLimitPartition.GetFixedWindowLimiter(
-            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? context.Request.Headers.Host.ToString(),
+    {
+        var ip = context.Request.Headers["X-Forwarded-For"].FirstOrDefault()
+                 ?? context.Connection.RemoteIpAddress?.ToString()
+                 ?? context.Request.Headers.Host.ToString();
+        return RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: ip,
             factory: partition => new FixedWindowRateLimiterOptions
             {
                 AutoReplenishment = true,
                 PermitLimit = 10,
                 QueueLimit = 0,
                 Window = TimeSpan.FromMinutes(1)
-            }));
+            });
+    });
 
     options.AddPolicy("ScrapeLimit", context =>
-        RateLimitPartition.GetFixedWindowLimiter(
-            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? context.Request.Headers.Host.ToString(),
+    {
+        var ip = context.Request.Headers["X-Forwarded-For"].FirstOrDefault()
+                 ?? context.Connection.RemoteIpAddress?.ToString()
+                 ?? context.Request.Headers.Host.ToString();
+        return RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: ip,
             factory: partition => new FixedWindowRateLimiterOptions
             {
                 AutoReplenishment = true,
                 PermitLimit = 15,
                 QueueLimit = 0,
                 Window = TimeSpan.FromMinutes(1)
-            }));
+            });
+    });
 });
 
 builder.Services.AddScoped<JwtService>();
