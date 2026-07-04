@@ -149,10 +149,13 @@ namespace WishlistApi.Controllers
                     if (titleNode != null) title = System.Net.WebUtility.HtmlDecode(titleNode.InnerText);
                 }
 
-               
                 if (!string.IsNullOrEmpty(title))
                 {
-                    title = title.Replace(" - Trendyol", "");
+                    title = title.Replace(" - Trendyol", "")
+                                 .Replace(" : Amazon.com.tr", "")
+                                 .Replace(" : Amazon.com", "")
+                                 .Replace("Amazon.com.tr: ", "")
+                                 .Replace("Amazon.com: ", "");
                     int dashIndex = title.IndexOf(" - Fiyatı");
                     if (dashIndex > 0) title = title.Substring(0, dashIndex).Trim();
                 }
@@ -164,7 +167,20 @@ namespace WishlistApi.Controllers
                     if (promoIndex > 0) description = description.Substring(0, promoIndex).Trim();
                 }
 
-              
+                // Fallback image parser if og:image or json-ld failed
+                if (string.IsNullOrEmpty(imageUrl))
+                {
+                    var landingImageNode = htmlDoc.DocumentNode.SelectSingleNode("//img[@id='landingImage']")
+                                           ?? htmlDoc.DocumentNode.SelectSingleNode("//img[@id='imgBlkFront']")
+                                           ?? htmlDoc.DocumentNode.SelectSingleNode("//meta[@name='twitter:image']")
+                                           ?? htmlDoc.DocumentNode.SelectSingleNode("//img[contains(@class, 'a-dynamic-image')]");
+                    if (landingImageNode != null)
+                    {
+                        imageUrl = landingImageNode.GetAttributeValue("src", null) 
+                                   ?? landingImageNode.GetAttributeValue("content", null);
+                    }
+                }
+
                 var priceNode = htmlDoc.DocumentNode.SelectSingleNode("//meta[@property='product:price:amount']");
                 if (priceNode != null)
                 {
@@ -175,7 +191,6 @@ namespace WishlistApi.Controllers
                     }
                 }
 
-              
                 if (price == null)
                 {
                     var trendyolPriceNode = htmlDoc.DocumentNode.SelectSingleNode("//span[contains(@class, 'prc-dsc')]") 
@@ -183,12 +198,19 @@ namespace WishlistApi.Controllers
                     
                     if (trendyolPriceNode != null)
                     {
-                        var priceText = trendyolPriceNode.InnerText.Replace("TL", "").Trim();
-                        priceText = priceText.Replace(".", "").Replace(",", ".");
-                        if (decimal.TryParse(priceText, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var parsedPrice))
-                        {
-                            price = parsedPrice;
-                        }
+                        price = CleanAndParsePrice(trendyolPriceNode.InnerText);
+                    }
+                }
+
+                if (price == null)
+                {
+                    var amazonPriceNode = htmlDoc.DocumentNode.SelectSingleNode("//span[contains(@class, 'a-price')]//span[@class='a-offscreen']")
+                                          ?? htmlDoc.DocumentNode.SelectSingleNode("//span[@id='priceblock_ourprice']")
+                                          ?? htmlDoc.DocumentNode.SelectSingleNode("//span[@id='priceblock_dealprice']")
+                                          ?? htmlDoc.DocumentNode.SelectSingleNode("//span[contains(@class, 'a-offscreen')]");
+                    if (amazonPriceNode != null)
+                    {
+                        price = CleanAndParsePrice(amazonPriceNode.InnerText);
                     }
                 }
 
@@ -223,6 +245,42 @@ namespace WishlistApi.Controllers
                     price = parsed;
                 }
             }
+        }
+
+        private static decimal? CleanAndParsePrice(string priceText)
+        {
+            if (string.IsNullOrEmpty(priceText)) return null;
+
+            priceText = priceText.Replace("TL", "")
+                                 .Replace("TRY", "")
+                                 .Replace("$", "")
+                                 .Replace("€", "")
+                                 .Replace("£", "")
+                                 .Replace(" ", "")
+                                 .Replace("\u00a0", "")
+                                 .Trim();
+
+            if (priceText.Contains(",") && priceText.Contains("."))
+            {
+                if (priceText.IndexOf(",") > priceText.IndexOf("."))
+                {
+                    priceText = priceText.Replace(".", "").Replace(",", ".");
+                }
+                else
+                {
+                    priceText = priceText.Replace(",", "");
+                }
+            }
+            else if (priceText.Contains(","))
+            {
+                priceText = priceText.Replace(",", ".");
+            }
+
+            if (decimal.TryParse(priceText, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var parsedPrice))
+            {
+                return parsedPrice;
+            }
+            return null;
         }
     }
 }
