@@ -1,6 +1,7 @@
 using HtmlAgilityPack;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Text.Json;
 
 namespace WishlistApi.Controllers
@@ -11,6 +12,7 @@ namespace WishlistApi.Controllers
     }
 
     [ApiController]
+    [EnableRateLimiting("ScrapeLimit")]
     public class ScraperController : ControllerBase
     {
         [HttpPost("api/scrape")]

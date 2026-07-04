@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using WishlistApi.Data;
@@ -10,6 +11,7 @@ namespace WishlistApi.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [EnableRateLimiting("AuthLimit")]
     public class UsersController : ControllerBase
     {
         private readonly AppDbContext _context;
