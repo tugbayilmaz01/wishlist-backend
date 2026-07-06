@@ -15,6 +15,13 @@ namespace WishlistApi.Controllers
     [EnableRateLimiting("ScrapeLimit")]
     public class ScraperController : ControllerBase
     {
+        private readonly IConfiguration _config;
+
+        public ScraperController(IConfiguration config)
+        {
+            _config = config;
+        }
+
         [HttpPost("api/scrape")]
         [Authorize]
         public async Task<IActionResult> ScrapeUrl([FromBody] ScrapeRequestDto request)
@@ -28,22 +35,32 @@ namespace WishlistApi.Controllers
             try
             {
                 using var httpClient = new HttpClient();
-                
-                httpClient.DefaultRequestHeaders.Clear();
-                httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36");
-                httpClient.DefaultRequestHeaders.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8");
-                httpClient.DefaultRequestHeaders.Add("Accept-Language", "tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7");
-                httpClient.DefaultRequestHeaders.Add("Referer", "https://www.trendyol.com/");
-                httpClient.DefaultRequestHeaders.Add("sec-ch-ua", "\"Google Chrome\";v=\"123\", \"Not:A-Brand\";v=\"8\", \"Chromium\";v=\"123\"");
-                httpClient.DefaultRequestHeaders.Add("sec-ch-ua-mobile", "?0");
-                httpClient.DefaultRequestHeaders.Add("sec-ch-ua-platform", "\"macOS\"");
-                httpClient.DefaultRequestHeaders.Add("sec-fetch-dest", "document");
-                httpClient.DefaultRequestHeaders.Add("sec-fetch-mode", "navigate");
-                httpClient.DefaultRequestHeaders.Add("sec-fetch-site", "same-origin");
-                httpClient.DefaultRequestHeaders.Add("sec-fetch-user", "?1");
-                httpClient.DefaultRequestHeaders.Add("Upgrade-Insecure-Requests", "1");
-                
-                var html = await httpClient.GetStringAsync(url);
+                string html;
+                var scraperApiKey = Environment.GetEnvironmentVariable("SCRAPER_API_KEY") ?? _config["ScraperApi:ApiKey"];
+
+                if (!string.IsNullOrEmpty(scraperApiKey))
+                {
+                    var scraperUrl = $"https://api.scraperapi.com/?api_key={scraperApiKey}&url={Uri.EscapeDataString(url)}";
+                    html = await httpClient.GetStringAsync(scraperUrl);
+                }
+                else
+                {
+                    httpClient.DefaultRequestHeaders.Clear();
+                    httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36");
+                    httpClient.DefaultRequestHeaders.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8");
+                    httpClient.DefaultRequestHeaders.Add("Accept-Language", "tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7");
+                    httpClient.DefaultRequestHeaders.Add("Referer", "https://www.trendyol.com/");
+                    httpClient.DefaultRequestHeaders.Add("sec-ch-ua", "\"Google Chrome\";v=\"123\", \"Not:A-Brand\";v=\"8\", \"Chromium\";v=\"123\"");
+                    httpClient.DefaultRequestHeaders.Add("sec-ch-ua-mobile", "?0");
+                    httpClient.DefaultRequestHeaders.Add("sec-ch-ua-platform", "\"macOS\"");
+                    httpClient.DefaultRequestHeaders.Add("sec-fetch-dest", "document");
+                    httpClient.DefaultRequestHeaders.Add("sec-fetch-mode", "navigate");
+                    httpClient.DefaultRequestHeaders.Add("sec-fetch-site", "same-origin");
+                    httpClient.DefaultRequestHeaders.Add("sec-fetch-user", "?1");
+                    httpClient.DefaultRequestHeaders.Add("Upgrade-Insecure-Requests", "1");
+                    
+                    html = await httpClient.GetStringAsync(url);
+                }
                 var htmlDoc = new HtmlDocument();
                 htmlDoc.LoadHtml(html);
 
