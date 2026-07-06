@@ -13,7 +13,7 @@ namespace WishlistApi.Models
         public required string Email { get; set; }
 
         [Column("password_hash")]
-        public required string PasswordHash { get; set; }
+        public string? PasswordHash { get; set; }
 
         [Column("name")]
         public string? Name { get; set; }

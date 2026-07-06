@@ -62,6 +62,10 @@ namespace WishlistApi.Data
                 .WithMany(u => u.SharedWishlists)
                 .HasForeignKey(wc => wc.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.Email)
+                .IsUnique();
         }
     }
 }
