@@ -18,7 +18,7 @@ namespace WishlistApi.Services
             var smtpPort = int.Parse(Environment.GetEnvironmentVariable("SMTP_PORT") ?? _config["Email:SmtpPort"] ?? "587");
             var smtpUser = Environment.GetEnvironmentVariable("SMTP_USER") ?? _config["Email:SmtpUser"] ?? "";
             var smtpPass = (Environment.GetEnvironmentVariable("SMTP_PASS") ?? _config["Email:SmtpPass"] ?? "").Replace(" ", "");
-            var fromName = _config["Email:FromName"] ?? "WishIt";
+            var fromName = _config["Email:FromName"] ?? "Wishtra";
 
             using var client = new SmtpClient(smtpHost, smtpPort)
             {
@@ -29,7 +29,7 @@ namespace WishlistApi.Services
             var mail = new MailMessage
             {
                 From = new MailAddress(smtpUser, fromName),
-                Subject = "Reset your WishIt password",
+                Subject = "Reset your Wishtra password",
                 IsBodyHtml = true,
                 Body = BuildEmailBody(resetLink)
             };
@@ -56,14 +56,14 @@ namespace WishlistApi.Services
                 ".footer { background: #fdfaf7; padding: 20px 40px; text-align: center; font-size: 12px; color: #b0929a; border-top: 1px solid #f0e6e9; }" +
                 "</style></head><body>" +
                 "<div class=\"wrapper\">" +
-                  "<div class=\"header\"><h1>🔐 WishIt</h1><p>Password Reset Request</p></div>" +
+                  "<div class=\"header\"><h1>🔐 Wishtra</h1><p>Password Reset Request</p></div>" +
                   "<div class=\"body\">" +
                     "<p>Hi there,</p>" +
-                    "<p>We received a request to reset your WishIt password. Click the button below to set a new password. This link will expire in <strong>1 hour</strong>.</p>" +
+                    "<p>We received a request to reset your Wishtra password. Click the button below to set a new password. This link will expire in <strong>1 hour</strong>.</p>" +
                     $"<a href=\"{resetLink}\" class=\"btn\">Reset My Password</a>" +
                     "<p class=\"note\">If you didn't request this, you can safely ignore this email. Your password will not change.</p>" +
                   "</div>" +
-                  $"<div class=\"footer\">© {year} WishIt — Made with ♥ for dreamers everywhere.</div>" +
+                  $"<div class=\"footer\">© {year} Wishtra — Made with ♥ for dreamers everywhere.</div>" +
                 "</div>" +
                 "</body></html>";
         }

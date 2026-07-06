@@ -84,6 +84,9 @@ builder.Services.AddCors(options =>
             return uri.Host == "localhost" || 
                    uri.Host == "127.0.0.1" || 
                    uri.Host == "wishlist-frontend-mocha.vercel.app" ||
+                   uri.Host == "wishtra.com" ||
+                   uri.Host.EndsWith(".wishtra.com") ||
+                   uri.Host.Contains("wishtra") ||
                    origin.StartsWith("http://192.168.");
         })
         .AllowAnyHeader()
