@@ -334,6 +334,7 @@ namespace WishlistApi.Controllers
         public async Task<IActionResult> GetSharedWishlist(string token)
         {
             var wishlist = await _context.Wishlists
+                .Include(w => w.User)
                 .Include(w => w.WishlistProducts)
                 .ThenInclude(wp => wp.Product)
                 .FirstOrDefaultAsync(w => w.ShareToken == token);
@@ -346,6 +347,13 @@ namespace WishlistApi.Controllers
                 Id = wishlist.Id,
                 Name = wishlist.Name,
                 ShareToken = wishlist.ShareToken,
+                Owner = wishlist.User != null ? new CollaboratorDto
+                {
+                    Id = wishlist.User.Id,
+                    Name = wishlist.User.Name,
+                    Email = wishlist.User.Email,
+                    Avatar = wishlist.User.Avatar
+                } : null,
                 Products = wishlist.WishlistProducts.Select(wp => new ProductDto
                 {
                     Id = wp.Product.Id,

@@ -59,7 +59,7 @@ namespace WishlistApi.Controllers
         [HttpPost("login")]
         public IActionResult Login([FromBody] UserLoginDto userDto)
         {
-            var existingUser = _context.Users.SingleOrDefault(u => u.Email == userDto.Email);
+            var existingUser = _context.Users.FirstOrDefault(u => u.Email == userDto.Email);
             if (existingUser == null) return BadRequest(new { message = "Invalid email or password" });
 
             if (existingUser.PasswordHash == null || !PasswordService.VerifyPassword(userDto.Password, existingUser.PasswordHash))
@@ -84,7 +84,7 @@ namespace WishlistApi.Controllers
                 };
 
                 var payload = await Google.Apis.Auth.GoogleJsonWebSignature.ValidateAsync(socialDto.Token, settings);
-                var existingUser = _context.Users.SingleOrDefault(u => u.Email == payload.Email);
+                var existingUser = _context.Users.FirstOrDefault(u => u.Email == payload.Email);
 
                 if (existingUser == null)
                 {
@@ -92,7 +92,7 @@ namespace WishlistApi.Controllers
                     {
                         Email = payload.Email,
                         Name = payload.Name,
-                        Avatar = payload.Picture,
+                        Avatar = null,
                         PasswordHash = null,
                         CreatedAt = DateTime.UtcNow
                     };
@@ -140,7 +140,7 @@ namespace WishlistApi.Controllers
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto dto)
         {
-            var user = _context.Users.SingleOrDefault(u => u.Email == dto.Email);
+            var user = _context.Users.FirstOrDefault(u => u.Email == dto.Email);
 
       
             if (user == null)
