@@ -40,7 +40,7 @@ namespace WishlistApi.Controllers
 
                 if (!string.IsNullOrEmpty(scraperApiKey))
                 {
-                    var scraperUrl = $"https://api.scraperapi.com/?api_key={scraperApiKey}&url={Uri.EscapeDataString(url)}";
+                    var scraperUrl = $"https://api.scraperapi.com/?api_key={scraperApiKey}&url={Uri.EscapeDataString(url)}&country_code=tr";
                     html = await httpClient.GetStringAsync(scraperUrl);
                 }
                 else
