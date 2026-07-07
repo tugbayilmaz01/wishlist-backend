@@ -37,6 +37,8 @@ namespace WishlistApi.Controllers
                 using var httpClient = new HttpClient();
                 string html;
                 var scraperApiKey = Environment.GetEnvironmentVariable("SCRAPER_API_KEY") ?? _config["ScraperApi:ApiKey"];
+                
+                Console.WriteLine($"[Scraper] ScrapeUrl called. Using ScraperAPI: {!string.IsNullOrEmpty(scraperApiKey)}");
 
                 if (!string.IsNullOrEmpty(scraperApiKey))
                 {
