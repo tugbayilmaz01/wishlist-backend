@@ -14,28 +14,37 @@ namespace WishlistApi.Services
 
         public async Task SendPasswordResetEmailAsync(string toEmail, string resetLink)
         {
-            var smtpHost = Environment.GetEnvironmentVariable("SMTP_HOST") ?? _config["Email:SmtpHost"] ?? "smtp.gmail.com";
-            var smtpPort = int.Parse(Environment.GetEnvironmentVariable("SMTP_PORT") ?? _config["Email:SmtpPort"] ?? "587");
-            var smtpUser = Environment.GetEnvironmentVariable("SMTP_USER") ?? _config["Email:SmtpUser"] ?? "";
-            var smtpPass = (Environment.GetEnvironmentVariable("SMTP_PASS") ?? _config["Email:SmtpPass"] ?? "").Replace(" ", "");
+            var resendApiKey = Environment.GetEnvironmentVariable("RESEND_API_KEY") ?? _config["Email:ResendApiKey"];
+            
+            if (string.IsNullOrEmpty(resendApiKey))
+            {
+                throw new Exception("Resend API Key is not configured.");
+            }
+
             var fromName = _config["Email:FromName"] ?? "Wishtra";
+            var fromEmail = _config["Email:FromEmail"] ?? "onboarding@resend.dev";
 
-            using var client = new SmtpClient(smtpHost, smtpPort)
+            using var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", resendApiKey);
+
+            var payload = new
             {
-                EnableSsl = true,
-                Credentials = new NetworkCredential(smtpUser, smtpPass)
+                from = $"{fromName} <{fromEmail}>",
+                to = new[] { toEmail },
+                subject = "Reset your Wishtra password",
+                html = BuildEmailBody(resetLink)
             };
 
-            var mail = new MailMessage
-            {
-                From = new MailAddress(smtpUser, fromName),
-                Subject = "Reset your Wishtra password",
-                IsBodyHtml = true,
-                Body = BuildEmailBody(resetLink)
-            };
-            mail.To.Add(toEmail);
+            var json = System.Text.Json.JsonSerializer.Serialize(payload);
+            using var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
 
-            await client.SendMailAsync(mail);
+            var response = await httpClient.PostAsync("https://api.resend.com/emails", content);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorText = await response.Content.ReadAsStringAsync();
+                throw new Exception($"Failed to send email via Resend: {response.StatusCode} - {errorText}");
+            }
         }
 
         private static string BuildEmailBody(string resetLink)
