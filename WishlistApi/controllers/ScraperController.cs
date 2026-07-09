@@ -45,6 +45,13 @@ namespace WishlistApi.Controllers
                     if (!string.IsNullOrEmpty(scraperApiKey))
                     {
                         var scraperUrl = $"https://api.scraperapi.com/?api_key={scraperApiKey}&url={Uri.EscapeDataString(url)}&country_code=tr";
+                        
+                        
+                        if (url.Contains("hepsiburada.com", StringComparison.OrdinalIgnoreCase))
+                        {
+                            scraperUrl += "&premium=true";
+                        }
+
                         html = await httpClient.GetStringAsync(scraperUrl);
                     }
                     else
@@ -196,7 +203,9 @@ namespace WishlistApi.Controllers
                                      .Replace(" : Amazon.com.tr", "")
                                      .Replace(" : Amazon.com", "")
                                      .Replace("Amazon.com.tr: ", "")
-                                     .Replace("Amazon.com: ", "");
+                                     .Replace("Amazon.com: ", "")
+                                     .Replace(" Fiyatı - Taksit Seçenekleri", "")
+                                     .Replace(" - Hepsiburada", "");
                         int dashIndex = title.IndexOf(" - Fiyatı");
                         if (dashIndex > 0) title = title.Substring(0, dashIndex).Trim();
                     }
@@ -213,11 +222,23 @@ namespace WishlistApi.Controllers
                         var landingImageNode = htmlDoc.DocumentNode.SelectSingleNode("//img[@id='landingImage']")
                                                ?? htmlDoc.DocumentNode.SelectSingleNode("//img[@id='imgBlkFront']")
                                                ?? htmlDoc.DocumentNode.SelectSingleNode("//meta[@name='twitter:image']")
+                                               ?? htmlDoc.DocumentNode.SelectSingleNode("//meta[@itemprop='image']")
+                                               ?? htmlDoc.DocumentNode.SelectSingleNode("//link[@rel='image_src']")
                                                ?? htmlDoc.DocumentNode.SelectSingleNode("//img[contains(@class, 'a-dynamic-image')]");
                         if (landingImageNode != null)
                         {
                             imageUrl = landingImageNode.GetAttributeValue("src", null) 
-                                       ?? landingImageNode.GetAttributeValue("content", null);
+                                       ?? landingImageNode.GetAttributeValue("content", null)
+                                       ?? landingImageNode.GetAttributeValue("href", null);
+                        }
+
+                        if (string.IsNullOrEmpty(imageUrl) && url.Contains("hepsiburada.com", StringComparison.OrdinalIgnoreCase))
+                        {
+                            var matchImg = System.Text.RegularExpressions.Regex.Match(html, @"(?:""image(?:Url)?""|""src"")\s*:\s*""(https://productimages\.hepsiburada\.net/[^""]+)""");
+                            if (matchImg.Success)
+                            {
+                                imageUrl = matchImg.Groups[1].Value.Replace("\\/", "/");
+                            }
                         }
                     }
 
@@ -251,6 +272,37 @@ namespace WishlistApi.Controllers
                         if (amazonPriceNode != null)
                         {
                             price = CleanAndParsePrice(amazonPriceNode.InnerText);
+                        }
+                    }
+
+                    if (price == null)
+                    {
+                        var hbPriceNode = htmlDoc.DocumentNode.SelectSingleNode("//meta[@itemprop='price']")
+                                          ?? htmlDoc.DocumentNode.SelectSingleNode("//div[@data-test-id='price-current-price']");
+                        if (hbPriceNode != null)
+                        {
+                            var priceContent = hbPriceNode.GetAttributeValue("content", null) ?? hbPriceNode.InnerText;
+                            price = CleanAndParsePrice(priceContent);
+                        }
+                        
+                    
+                        if (price == null && url.Contains("hepsiburada.com", StringComparison.OrdinalIgnoreCase))
+                        {
+                            var match1 = System.Text.RegularExpressions.Regex.Match(html, @"""(?:currentPrice|price|originalPrice)""\s*:\s*(\d+(?:\.\d+)?)");
+                            if (match1.Success)
+                            {
+                                if (decimal.TryParse(match1.Groups[1].Value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var p)) price = p;
+                            }
+                            
+                            if (price == null)
+                            {
+                                var match2 = System.Text.RegularExpressions.Regex.Match(html, @"markupText\s*:\s*'currentPriceBeforePoint'\s*""\s*>([^<]+)");
+                                if (match2.Success)
+                                {
+                                    var priceStr = match2.Groups[1].Value.Trim();
+                                    price = CleanAndParsePrice(priceStr);
+                                }
+                            }
                         }
                     }
 
