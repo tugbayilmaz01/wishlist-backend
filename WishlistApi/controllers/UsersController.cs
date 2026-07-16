@@ -78,20 +78,33 @@ namespace WishlistApi.Controllers
                 if (socialDto.Provider.ToLower() != "google")
                     return BadRequest(new { message = "Provider not supported" });
 
-                var settings = new Google.Apis.Auth.GoogleJsonWebSignature.ValidationSettings()
-                {
-                    Audience = new[] { _jwtService.GetGoogleClientId() }
-                };
+                var handler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
+                var jwtToken = handler.ReadJwtToken(socialDto.Token);
 
-                var payload = await Google.Apis.Auth.GoogleJsonWebSignature.ValidateAsync(socialDto.Token, settings);
-                var existingUser = _context.Users.FirstOrDefault(u => u.Email == payload.Email);
+                if (jwtToken.Issuer != "accounts.google.com" && jwtToken.Issuer != "https://accounts.google.com")
+                    return BadRequest(new { message = "Invalid token issuer" });
+
+                var audience = jwtToken.Audiences.FirstOrDefault();
+                if (audience != _jwtService.GetGoogleClientId())
+                    return BadRequest(new { message = "Invalid token audience" });
+
+                if (jwtToken.ValidTo < DateTime.UtcNow)
+                    return BadRequest(new { message = "Token expired" });
+
+                var payloadEmail = jwtToken.Claims.FirstOrDefault(c => c.Type == "email")?.Value;
+                var payloadName = jwtToken.Claims.FirstOrDefault(c => c.Type == "name")?.Value;
+
+                if (string.IsNullOrEmpty(payloadEmail))
+                    return BadRequest(new { message = "Email not found in token" });
+
+                var existingUser = _context.Users.FirstOrDefault(u => u.Email == payloadEmail);
 
                 if (existingUser == null)
                 {
                     existingUser = new User
                     {
-                        Email = payload.Email,
-                        Name = payload.Name,
+                        Email = payloadEmail,
+                        Name = payloadName,
                         Avatar = null,
                         PasswordHash = null,
                         CreatedAt = DateTime.UtcNow
